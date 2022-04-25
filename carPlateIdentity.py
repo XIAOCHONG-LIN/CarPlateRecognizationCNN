@@ -4,6 +4,7 @@ import sys
 import numpy as np
 # import tensorflow as tf
 import tensorflow.compat.v1 as tf
+
 tf.disable_v2_behavior()
 
 char_table = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
@@ -85,10 +86,11 @@ def verify_scale(rotate_rect):
     area = rotate_rect[1][0] * rotate_rect[1][1]
     if min_area < area < max_area and min_aspect < r < max_aspect:
         # check if the angel of rectangle exceeds theta
-        # if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= rotate_rect[2] < -(90 - theta)) or
-        #         (rotate_rect[1][1] < rotate_rect[1][0] and -theta < rotate_rect[2] <= 0)):
-        if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= -rotate_rect[2] < -(90 - theta)) or
-                (rotate_rect[1][1] < rotate_rect[1][0] and -theta < -rotate_rect[2] <= 0)):  # add minus to
+        # print('verify_scale:', rotate_rect[2])
+        if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= rotate_rect[2] < -(90 - theta)) or
+                (rotate_rect[1][1] < rotate_rect[1][0] and -theta < rotate_rect[2] <= 0)):
+            # if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= -rotate_rect[2] < -(90 - theta)) or
+            #         (rotate_rect[1][1] < rotate_rect[1][0] and -theta < -rotate_rect[2] <= 0)):  # add minus to
             return True
     return False
 
@@ -98,6 +100,11 @@ global car_img
 
 def img_Transform(car_rect, image):
     global car_img
+    # print(car_rect)
+    # plate_img = image[car_rect]
+    # cv2.imshow('before transform: ', plate_img)
+    # cv2.waitKey()
+
     img_h, img_w = image.shape[:2]
     rect_w, rect_h = car_rect[1][0], car_rect[1][1]
     angle = car_rect[2]
@@ -110,11 +117,11 @@ def img_Transform(car_rect, image):
         return_flag = True
     if return_flag:
         car_img = image[int(car_rect[0][1] - rect_h / 2): int(car_rect[0][1] + rect_h / 2),
-                        int(car_rect[0][0] - rect_w / 2): int(car_rect[0][0] + rect_w / 2)]
+                  int(car_rect[0][0] - rect_w / 2): int(car_rect[0][0] + rect_w / 2)]
         return car_img
 
     car_rect = (car_rect[0], (rect_w, rect_h), angle)
-    box = cv2.boxPoints(car_rect)
+    box = cv2.boxPoints(car_rect).astype(int)
 
     height_point = right_point = [0, 0]
     left_point = low_point = [car_rect[0][0], car_rect[0][1]]
@@ -143,6 +150,9 @@ def img_Transform(car_rect, image):
         M = cv2.getAffineTransform(pts1, pts2)  # get affine transform matrix
         dst = cv2.warpAffine(image, M, (round(img_w * 2), round(img_h * 2)))  # apply transformation
         car_img = dst[int(right_point[1]):int(height_point[1]), int(new_left_point[0]):int(right_point[0])]
+
+    cv2.imshow('car_img: ', car_img)
+    cv2.waitKey()
 
     return car_img
 
@@ -271,6 +281,12 @@ def verify_color(rotate_rect, src_image):
             if mask[row, col] != 0:
                 mask_points.append((col - 1, row - 1))
     mask_rotateRect = cv2.minAreaRect(np.array(mask_points))
+    # print('mask:', mask_rotateRect)
+    adjustAngle = mask_rotateRect[2]
+    if adjustAngle > 0:
+        adjustAngle = adjustAngle - 180
+        mask_rotateRect = (mask_rotateRect[0], mask_rotateRect[1], adjustAngle)
+    # print('mask2:', mask_rotateRect)
     if verify_scale(mask_rotateRect):
         return True, mask_rotateRect
     else:
@@ -286,6 +302,12 @@ def locate_carPlate(orig_img, pred_image):
     for i, contour in enumerate(contours):
         cv2.drawContours(temp1_orig_img, contours, i, (0, 255, 255), 2)
         rotate_rect = cv2.minAreaRect(contour)  # find the min area rectangle
+        # print('rotate_rect:', rotate_rect)
+        adjustAngle = rotate_rect[2]
+        if adjustAngle > 0:
+            adjustAngle = adjustAngle - 180
+            rotate_rect = (rotate_rect[0], rotate_rect[1], adjustAngle)
+        # print('rotate_rect:', rotate_rect)
         if verify_scale(rotate_rect):  # verify car plate by scale
             ret1, rotate_rect2 = verify_color(rotate_rect, temp2_orig_img)  # Verify car plate by color
             if not ret1:
@@ -298,12 +320,15 @@ def locate_carPlate(orig_img, pred_image):
             for k in range(4):
                 n1, n2 = k % 4, (k + 1) % 4
                 cv2.line(temp1_orig_img, (box[n1][0], box[n1][1]), (box[n2][0], box[n2][1]), (255, 0, 0), 2)
-            # cv2.imshow('opencv_' + str(i), car_plate1)
+            # print(car_plate1.shape)
+            cv2.imshow('opencv_' + str(i), car_plate1)
+            cv2.waitKey()
             # adjust area #
             carPlate_list.append(car_plate1)
-    # cv2.namedWindow("contour", 0)
-    # cv2.resizeWindow("contour", 640, 480)
-    # cv2.imshow('contour', temp1_orig_img)
+    cv2.namedWindow("contour", 0)
+    cv2.resizeWindow("contour", 640, 480)
+    cv2.imshow('contour', temp1_orig_img)
+    cv2.waitKey()
     return carPlate_list
 
 
@@ -490,9 +515,9 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    # img = cv2.imread('./images/pictures/1.jpg')
+    img = cv2.imread('./images/pictures/2.jpg')
 
-    img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
+    # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
     pred_img = pre_process(img)  # preprocessing
 
