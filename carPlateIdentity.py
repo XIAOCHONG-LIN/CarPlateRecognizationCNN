@@ -317,7 +317,11 @@ def locate_carPlate(orig_img, pred_image):
             if not ret1:
                 continue
             car_plate1 = img_Transform(rotate_rect2, temp2_orig_img)  # transform image if there is an angel
-            car_plate1 = cv2.resize(car_plate1, (car_plate_w, car_plate_h))  # adjust image size for CNN recognition
+            w, h, d = car_plate1.shape
+            if (w > 0) and (h > 0):
+                car_plate1 = cv2.resize(car_plate1, (car_plate_w, car_plate_h))  # adjust image size for CNN recognition
+            else:
+                continue
             # adjust area #
             # box = cv2.boxPoints(rotate_rect2)
             box = cv2.boxPoints(rotate_rect2).astype(int)
@@ -438,7 +442,11 @@ def get_chars(car_plate1):
 
     for i, addr in enumerate(char_addr_list):
         char_img = car_plate1[chars_top:chars_bottom + 1, addr[0]:addr[1]]
-        char_img = cv2.resize(char_img, (char_w, char_h))
+        w, h = char_img.shape
+        if (w > 0) and (h > 0):
+            char_img = cv2.resize(char_img, (char_w, char_h))
+        else:
+            continue
         char_imgs.append(char_img)
         # cv2.imshow("char_img", char_img)
         # cv2.waitKey()
@@ -518,7 +526,7 @@ if __name__ == '__main__':
     car_plate_w, car_plate_h = 136, 36
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
-    char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-540.meta'
+    char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
     img = cv2.imread('./images/pictures/3.jpg')
 
     # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
