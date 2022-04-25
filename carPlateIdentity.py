@@ -84,11 +84,18 @@ def verify_scale(rotate_rect):
     r = rotate_rect[1][0] / rotate_rect[1][1]
     r = max(r, 1 / r)
     area = rotate_rect[1][0] * rotate_rect[1][1]
+    angle = rotate_rect[2]
+    print('angle1:', angle)
+    if 0 < angle < 10:
+        angle = 0
+    elif 10 < angle:
+        angle = angle - 180
+    print('angle2:', angle)
     if min_area < area < max_area and min_aspect < r < max_aspect:
         # check if the angel of rectangle exceeds theta
         # print('verify_scale:', rotate_rect[2])
-        if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= rotate_rect[2] < -(90 - theta)) or
-                (rotate_rect[1][1] < rotate_rect[1][0] and -theta < rotate_rect[2] <= 0)):
+        if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= angle < -(90 - theta)) or
+                (rotate_rect[1][1] < rotate_rect[1][0] and -theta < angle <= 0)):
             # if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= -rotate_rect[2] < -(90 - theta)) or
             #         (rotate_rect[1][1] < rotate_rect[1][0] and -theta < -rotate_rect[2] <= 0)):  # add minus to
             return True
@@ -281,14 +288,6 @@ def verify_color(rotate_rect, src_image):
             if mask[row, col] != 0:
                 mask_points.append((col - 1, row - 1))
     mask_rotateRect = cv2.minAreaRect(np.array(mask_points))
-    print('mask:', mask_rotateRect)
-    adjustAngle = mask_rotateRect[2]
-    if adjustAngle > 0:
-        adjustAngle = adjustAngle - 180
-        if adjustAngle < -90:
-            adjustAngle = -90
-        mask_rotateRect = (mask_rotateRect[0], mask_rotateRect[1], adjustAngle)
-    print('mask2:', mask_rotateRect)
     if verify_scale(mask_rotateRect):
         return True, mask_rotateRect
     else:
@@ -304,18 +303,12 @@ def locate_carPlate(orig_img, pred_image):
     for i, contour in enumerate(contours):
         cv2.drawContours(temp1_orig_img, contours, i, (0, 255, 255), 2)
         rotate_rect = cv2.minAreaRect(contour)  # find the min area rectangle
-        print('rotate_rect:', rotate_rect)
-        adjustAngle = int(rotate_rect[2])
-        if adjustAngle > 0:
-            adjustAngle = adjustAngle - 180
-            if adjustAngle < -90:
-                adjustAngle = -90
-            rotate_rect = (rotate_rect[0], rotate_rect[1], adjustAngle)
-        print('rotate_rect2:', rotate_rect)
         if verify_scale(rotate_rect):  # verify car plate by scale
+            print('enter scale:', rotate_rect)
             ret1, rotate_rect2 = verify_color(rotate_rect, temp2_orig_img)  # Verify car plate by color
             if not ret1:
                 continue
+            print('recognized rect:', rotate_rect2)
             car_plate1 = img_Transform(rotate_rect2, temp2_orig_img)  # transform image if there is an angel
             w, h, d = car_plate1.shape
             if (w > 0) and (h > 0):
@@ -334,7 +327,6 @@ def locate_carPlate(orig_img, pred_image):
             # adjust area #
             carPlate_list.append(car_plate1)
     cv2.namedWindow("contour", 0)
-    cv2.resizeWindow("contour", 640, 480)
     cv2.imshow('contour', temp1_orig_img)
     cv2.waitKey()
     return carPlate_list
@@ -527,7 +519,7 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    img = cv2.imread('./images/pictures/3.jpg')
+    img = cv2.imread('./images/pictures/6.jpg')
 
     # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
