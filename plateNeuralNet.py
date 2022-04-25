@@ -214,3 +214,4 @@ if __name__ == '__main__':
         test_X = net.init_testData(test_dir)
         result, yes, no = net.test(test_X, model_path)
         print('contains car plate:{0}, no car plate:{1}'.format(yes, no))
+        print('accuracy:', (yes + no)/200)

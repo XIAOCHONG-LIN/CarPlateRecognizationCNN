@@ -204,7 +204,7 @@ if __name__ == '__main__':
     data_dir = './carIdentityData/cnn_char_train'
     test_dir = './carIdentityData/cnn_char_test'
     train_model_path = './carIdentityData/model/char_recongnize/model.ckpt'
-    model_path = './carIdentityData/model/char_recongnize/model.ckpt-520'
+    model_path = './carIdentityData/model/char_recongnize/model.ckpt-500'
 
     train_flag = int(sys.argv[1])
     net = CharCNN()
