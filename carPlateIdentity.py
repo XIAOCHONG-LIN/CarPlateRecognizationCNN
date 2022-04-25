@@ -281,12 +281,14 @@ def verify_color(rotate_rect, src_image):
             if mask[row, col] != 0:
                 mask_points.append((col - 1, row - 1))
     mask_rotateRect = cv2.minAreaRect(np.array(mask_points))
-    # print('mask:', mask_rotateRect)
+    print('mask:', mask_rotateRect)
     adjustAngle = mask_rotateRect[2]
     if adjustAngle > 0:
         adjustAngle = adjustAngle - 180
+        if adjustAngle < -90:
+            adjustAngle = -90
         mask_rotateRect = (mask_rotateRect[0], mask_rotateRect[1], adjustAngle)
-    # print('mask2:', mask_rotateRect)
+    print('mask2:', mask_rotateRect)
     if verify_scale(mask_rotateRect):
         return True, mask_rotateRect
     else:
@@ -302,12 +304,14 @@ def locate_carPlate(orig_img, pred_image):
     for i, contour in enumerate(contours):
         cv2.drawContours(temp1_orig_img, contours, i, (0, 255, 255), 2)
         rotate_rect = cv2.minAreaRect(contour)  # find the min area rectangle
-        # print('rotate_rect:', rotate_rect)
-        adjustAngle = rotate_rect[2]
+        print('rotate_rect:', rotate_rect)
+        adjustAngle = int(rotate_rect[2])
         if adjustAngle > 0:
             adjustAngle = adjustAngle - 180
+            if adjustAngle < -90:
+                adjustAngle = -90
             rotate_rect = (rotate_rect[0], rotate_rect[1], adjustAngle)
-        # print('rotate_rect:', rotate_rect)
+        print('rotate_rect2:', rotate_rect)
         if verify_scale(rotate_rect):  # verify car plate by scale
             ret1, rotate_rect2 = verify_color(rotate_rect, temp2_orig_img)  # Verify car plate by color
             if not ret1:
@@ -514,8 +518,8 @@ if __name__ == '__main__':
     car_plate_w, car_plate_h = 136, 36
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
-    char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    img = cv2.imread('./images/pictures/2.jpg')
+    char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-540.meta'
+    img = cv2.imread('./images/pictures/3.jpg')
 
     # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
