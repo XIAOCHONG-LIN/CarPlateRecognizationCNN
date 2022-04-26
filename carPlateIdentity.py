@@ -11,6 +11,8 @@ char_table = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', '
               'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '川', '鄂', '赣', '甘', '贵',
               '桂', '黑', '沪', '冀', '津', '京', '吉', '辽', '鲁', '蒙', '闽', '宁', '青', '琼', '陕', '苏', '晋',
               '皖', '湘', '新', '豫', '渝', '粤', '云', '藏', '浙']
+head_table = ['川', '鄂', '赣', '甘', '贵', '桂', '黑', '沪', '冀', '津', '京', '吉', '辽', '鲁', '蒙', '闽', '宁', '青', '琼',
+              '陕', '苏', '晋', '皖', '湘', '新', '豫', '渝', '粤', '云', '藏', '浙']
 
 
 def gaussian_blur(image, kernel_size):
@@ -70,6 +72,7 @@ def find_board_area(image):
 
 
 def verify_scale(rotate_rect):
+    # print('verify scale:', rotate_rect)
     error = 0.4
     aspect = 4  # 4.7272
     min_area = 10 * (10 * aspect)
@@ -84,13 +87,17 @@ def verify_scale(rotate_rect):
     r = rotate_rect[1][0] / rotate_rect[1][1]
     r = max(r, 1 / r)
     area = rotate_rect[1][0] * rotate_rect[1][1]
-    if min_area < area < max_area and min_aspect < r < max_aspect:
+    print('area:', min_area, '-', max_area, 'r:', min_aspect, '-', max_aspect)
+    print('rect area:', area, 'rect r:', r)
+    if min_area <= area <= max_area and min_aspect <= r <= max_aspect:
         # check if the angel of rectangle exceeds theta
         # print('verify_scale:', rotate_rect[2])
-        if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= rotate_rect[2] < -(90 - theta)) or
-                (rotate_rect[1][1] < rotate_rect[1][0] and -theta < rotate_rect[2] <= 0)):
-            # if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= -rotate_rect[2] < -(90 - theta)) or
-            #         (rotate_rect[1][1] < rotate_rect[1][0] and -theta < -rotate_rect[2] <= 0)):  # add minus to
+        # if ((rotate_rect[1][0] < rotate_rect[1][1] and -90 <= rotate_rect[2] < -(90 - theta)) or
+        #         (rotate_rect[1][1] < rotate_rect[1][0] and -theta < rotate_rect[2] <= 0)):
+        if (rotate_rect[1][0] < rotate_rect[1][1] and
+            ((-90 <= -rotate_rect[2] < -(90 - theta)) or (-90 <= rotate_rect[2] < -(90 - theta)))) or \
+                (rotate_rect[1][1] < rotate_rect[1][0] and
+                 ((-theta < -rotate_rect[2] <= 0) or (-theta < rotate_rect[2] <= 0))):  # add minus to
             return True
     return False
 
@@ -211,16 +218,19 @@ def verify_color(rotate_rect, src_image):
     # find column and row range
     rand_seed_num = 5000
     valid_seed_num = 200
-    adjust_param = 0.1
+    adjust_param = 0.04  # 0.1
     box_points = cv2.boxPoints(rotate_rect)
+    # print('box points:', box_points)
     box_points_x = [n[0] for n in box_points]
     box_points_x.sort(reverse=False)
     adjust_x = int((box_points_x[2] - box_points_x[1]) * adjust_param)
     col_range = [box_points_x[1] + adjust_x, box_points_x[2] - adjust_x]
+    # print('col range:', col_range)
     box_points_y = [n[1] for n in box_points]
     box_points_y.sort(reverse=False)
     adjust_y = int((box_points_y[2] - box_points_y[1]) * adjust_param)
     row_range = [box_points_y[1] + adjust_y, box_points_y[2] - adjust_y]
+    # print('row range:', row_range)
 
     # rotation adjustment
     if (col_range[1] - col_range[0]) / (box_points_x[3] - box_points_x[0]) < 0.4 \
@@ -266,13 +276,13 @@ def verify_color(rotate_rect, src_image):
             if seed_cnt >= valid_seed_num:
                 break
     # adjusting #
-    # show_seed = np.random.uniform(1, 100, 1).astype(np.uint16)
-    # cv2.namedWindow("floodfill" + str(show_seed), 0)
-    # cv2.resizeWindow("floodfill" + str(show_seed), 640, 480)
-    # cv2.imshow('floodfill' + str(show_seed), flood_img)
-    # cv2.namedWindow("flood_mask" + str(show_seed), 0)
-    # cv2.resizeWindow("flood_mask" + str(show_seed), 640, 480)
-    # cv2.imshow('flood_mask' + str(show_seed), mask)
+    show_seed = np.random.uniform(1, 100, 1).astype(np.uint16)
+    cv2.namedWindow("floodfill" + str(show_seed), 0)
+    cv2.resizeWindow("floodfill" + str(show_seed), 640, 480)
+    cv2.imshow('floodfill' + str(show_seed), flood_img)
+    cv2.namedWindow("flood_mask" + str(show_seed), 0)
+    cv2.resizeWindow("flood_mask" + str(show_seed), 640, 480)
+    cv2.imshow('flood_mask' + str(show_seed), mask)
     # adjusting #
     # find the minimum rectangle area
     mask_points = []
@@ -282,15 +292,15 @@ def verify_color(rotate_rect, src_image):
                 mask_points.append((col - 1, row - 1))
     mask_rotateRect = cv2.minAreaRect(np.array(mask_points))
     print('original mask:', mask_rotateRect)
-    angle = mask_rotateRect[2]
-    if 0 < angle < 10:
-        angle = 0
-    elif 10 < angle < 90:
-        angle = -90
-    else:
-        angle = angle - 180
-    mask_rotateRect = (mask_rotateRect[0], mask_rotateRect[1], angle)
-    print('new mask:', mask_rotateRect)
+    # angle = mask_rotateRect[2]
+    # if 0 < angle < 10:
+    #     angle = 0
+    # elif 10 < angle < 90:
+    #     angle = -90
+    # else:
+    #     angle = angle - 180
+    # mask_rotateRect = (mask_rotateRect[0], mask_rotateRect[1], angle)
+    # print('new mask:', mask_rotateRect)
     if verify_scale(mask_rotateRect):
         return True, mask_rotateRect
     else:
@@ -299,6 +309,8 @@ def verify_color(rotate_rect, src_image):
 
 # locating car plate
 def locate_carPlate(orig_img, pred_image):
+    cv2.imshow('pre-process', pred_image)
+    cv2.waitKey()
     carPlate_list = []
     temp1_orig_img = orig_img.copy()  # adjusting
     temp2_orig_img = orig_img.copy()  # adjusting
@@ -306,22 +318,26 @@ def locate_carPlate(orig_img, pred_image):
     for i, contour in enumerate(contours):
         cv2.drawContours(temp1_orig_img, contours, i, (0, 255, 255), 2)
         rotate_rect = cv2.minAreaRect(contour)  # find the min area rectangle
-        print('original rotate_rect:', rotate_rect)
-        angle = rotate_rect[2]
-        if 0 < angle < 10:
-            angle = 0
-        elif 10 < angle < 90:
-            angle = -90
-        else:
-            angle = angle - 180
-        rotate_rect = (rotate_rect[0], rotate_rect[1], angle)
-        print('new rotate_rect:', rotate_rect)
+        # print('original rotate_rect:', rotate_rect)
+        # angle = rotate_rect[2]
+        # if 0 < angle < 10:
+        #     angle = 0
+        # elif 10 < angle < 90:
+        #     angle = -90
+        # else:
+        #     angle = angle - 180
+        # rotate_rect = (rotate_rect[0], rotate_rect[1], angle)
+        # print('new rotate_rect:', rotate_rect)
         if verify_scale(rotate_rect):  # verify car plate by scale
-            # print('enter scale:', rotate_rect)
+            print('enter scale:', rotate_rect)
             ret1, rotate_rect2 = verify_color(rotate_rect, temp2_orig_img)  # Verify car plate by color
             if not ret1:
                 continue
-            # print('recognized rect:', rotate_rect2)
+            print('recognized rect:', rotate_rect2)
+            angle = rotate_rect2[2]
+            if angle > 0:
+                angle = angle - 180
+                rotate_rect2 = (rotate_rect2[0], rotate_rect2[1], angle)
             car_plate1 = img_Transform(rotate_rect2, temp2_orig_img)  # transform image if there is an angel
             w, h, d = car_plate1.shape
             if (w > 0) and (h > 0):
@@ -339,7 +355,6 @@ def locate_carPlate(orig_img, pred_image):
             cv2.waitKey()
             # adjust area #
             carPlate_list.append(car_plate1)
-    cv2.namedWindow("contour", 0)
     cv2.imshow('contour', temp1_orig_img)
     cv2.waitKey()
     return carPlate_list
@@ -453,8 +468,8 @@ def get_chars(car_plate1):
         else:
             continue
         char_imgs.append(char_img)
-        # cv2.imshow("char_img", char_img)
-        # cv2.waitKey()
+        cv2.imshow("char_img", char_img)
+        cv2.waitKey()
     return char_imgs
 
 
@@ -468,6 +483,7 @@ def extract_char(car_plate1):
 
 
 def cnn_select_carPlate(plate_list, model_path):
+    print('cnn plate list:', np.array(plate_list).shape)
     if len(plate_list) == 0:
         return False, plate_list
     g1 = tf.Graph()
@@ -532,13 +548,14 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    img = cv2.imread('./images/pictures/7.jpg')
+    img = cv2.imread('./images/pictures/10.jpg')
 
     # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
     pred_img = pre_process(img)  # preprocessing
 
     car_plate_list = locate_carPlate(img, pred_img)  # locating the car plate
+    print('car plate quantity:', len(car_plate_list))
 
     ret, car_plate = cnn_select_carPlate(car_plate_list, plate_model_path)  # car plate recognize
     if not ret:
@@ -549,6 +566,11 @@ if __name__ == '__main__':
     char_img_list = extract_char(car_plate)  # extract character
 
     text = cnn_recognize_char(char_img_list, char_model_path)  # recognize car plate character
+    for word in text:
+        if word not in head_table:
+            text.remove(word)
+        else:
+            break
     print(text)
 
     cv2.waitKey(0)
