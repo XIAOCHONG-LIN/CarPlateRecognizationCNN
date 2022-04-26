@@ -548,9 +548,9 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    img = cv2.imread('./images/pictures/10.jpg')
+    # img = cv2.imread('./images/pictures/10.jpg')
 
-    # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
+    img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
     pred_img = pre_process(img)  # preprocessing
 
