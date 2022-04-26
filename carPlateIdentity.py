@@ -267,6 +267,11 @@ def verify_color(rotate_rect, src_image):
         rand_index = np.random.choice(rand_seed_num, 1, replace=False)
         # row, col = points_row[rand_index], points_col[rand_index]
         row, col = points_row[rand_index][0], points_col[rand_index][0]
+        h1, w1 = h.shape
+        if row > h1:
+            row = h1
+        if col > w1:
+            col = w1
         # set the color to be car plate color
         if (((h[row, col] > 26) & (h[row, col] < 34)) | ((h[row, col] > 100) & (h[row, col] < 124))) & (
                 s[row, col] > 70) & (v[row, col] > 70):
@@ -548,9 +553,9 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    # img = cv2.imread('./images/pictures/10.jpg')
+    img = cv2.imread('./images/pictures/1.jpg')
 
-    img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
+    # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
     pred_img = pre_process(img)  # preprocessing
 
