@@ -232,6 +232,10 @@ def verify_color(rotate_rect, src_image):
     row_range = [box_points_y[1] + adjust_y, box_points_y[2] - adjust_y]
     # print('row range:', row_range)
 
+    hsv_img = cv2.cvtColor(src_image, cv2.COLOR_BGR2HSV)
+    h, s, v = hsv_img[:, :, 0], hsv_img[:, :, 1], hsv_img[:, :, 2]
+    r1, c1 = h.shape
+
     # rotation adjustment
     if (col_range[1] - col_range[0]) / (box_points_x[3] - box_points_x[0]) < 0.4 \
             or (row_range[1] - row_range[0]) / (box_points_y[3] - box_points_y[0]) < 0.4:
@@ -248,18 +252,26 @@ def verify_color(rotate_rect, src_image):
                 pt1[1], pt2[1] = pt1[1] + adjust_y, pt2[1] - adjust_y
             else:
                 pt1[1], pt2[1] = pt1[1] - y_adjust, pt2[1] + y_adjust
+            # print('pt0, r1', pt1[0], pt2[0], c1)
+            # print('pt1, c1', pt1[1], pt2[1], r1)
+            if pt2[0] > c1:
+                pt2[0] = c1
+            if pt2[1] > r1:
+                pt2[1] = r1
             temp_list_x = [int(x) for x in np.linspace(pt1[0], pt2[0], int(rand_seed_num / 2))]
             temp_list_y = [int(y) for y in np.linspace(pt1[1], pt2[1], int(rand_seed_num / 2))]
+            # print('temp x:', temp_list_x)
+            # print('temp y:', temp_list_y)
             points_col.extend(temp_list_x)
             points_row.extend(temp_list_y)
+            # print('col-x:', points_col)
+            # print('row-y:', points_row)
     else:
         points_row = np.random.randint(row_range[0], row_range[1], size=rand_seed_num)
         points_col = np.linspace(col_range[0], col_range[1], num=rand_seed_num).astype(int)
 
     points_row = np.array(points_row)
     points_col = np.array(points_col)
-    hsv_img = cv2.cvtColor(src_image, cv2.COLOR_BGR2HSV)
-    h, s, v = hsv_img[:, :, 0], hsv_img[:, :, 1], hsv_img[:, :, 2]
 
     flood_img = src_image.copy()  # flood fill image
     seed_cnt = 0
@@ -267,11 +279,6 @@ def verify_color(rotate_rect, src_image):
         rand_index = np.random.choice(rand_seed_num, 1, replace=False)
         # row, col = points_row[rand_index], points_col[rand_index]
         row, col = points_row[rand_index][0], points_col[rand_index][0]
-        h1, w1 = h.shape
-        if row > h1:
-            row = h1
-        if col > w1:
-            col = w1
         # set the color to be car plate color
         if (((h[row, col] > 26) & (h[row, col] < 34)) | ((h[row, col] > 100) & (h[row, col] < 124))) & (
                 s[row, col] > 70) & (v[row, col] > 70):
@@ -553,7 +560,7 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    img = cv2.imread('./images/pictures/1.jpg')
+    img = cv2.imread('./images/pictures/46.jpg')
 
     # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
