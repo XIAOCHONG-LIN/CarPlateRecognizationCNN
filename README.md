@@ -1,5 +1,6 @@
-# <img alt="img.png" src="./ImageREADME/img.png"/>
+<img alt="img.png" height="200" src="./ImageREADME/img.png"/>
 
+####
 <img alt="ABSTRACT" src="./ImageREADME/img_3.png" HEIGHT="50"/>
 
 * This system implements a car plate recognition system, which consists of car plate location, character recognition, and convolution neural network training and recognition module.
