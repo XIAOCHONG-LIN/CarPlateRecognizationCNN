@@ -255,9 +255,11 @@ def verify_color(rotate_rect, src_image):
             # print('pt0, r1', pt1[0], pt2[0], c1)
             # print('pt1, c1', pt1[1], pt2[1], r1)
             if pt2[0] > c1:
-                pt2[0] = c1
+                pt2[0] = c1-1
             if pt2[1] > r1:
-                pt2[1] = r1
+                pt2[1] = r1-1
+            # print('pt0, r1', pt1[0], pt2[0], c1)
+            # print('pt1, c1', pt1[1], pt2[1], r1)
             temp_list_x = [int(x) for x in np.linspace(pt1[0], pt2[0], int(rand_seed_num / 2))]
             temp_list_y = [int(y) for y in np.linspace(pt1[1], pt2[1], int(rand_seed_num / 2))]
             # print('temp x:', temp_list_x)
