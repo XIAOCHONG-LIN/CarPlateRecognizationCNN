@@ -296,14 +296,10 @@ def verify_color(rotate_rect, src_image):
                 break
     # adjusting #
     show_seed = np.random.uniform(1, 100, 1).astype(np.uint16)
-    cv2.namedWindow("floodfill" + str(show_seed), 0)
-    cv2.resizeWindow("floodfill" + str(show_seed), 640, 480)
-    cv2.imshow('floodfill' + str(show_seed), flood_img)
+    cv2.imshow('floodfill', flood_img)
     cv2.waitKey()
 
-    cv2.namedWindow("flood_mask" + str(show_seed), 0)
-    cv2.resizeWindow("flood_mask" + str(show_seed), 640, 480)
-    cv2.imshow('flood_mask' + str(show_seed), mask)
+    cv2.imshow('flood_mask', mask)
     cv2.waitKey()
 
     # adjusting #
@@ -372,7 +368,8 @@ def locate_carPlate(orig_img, pred_image):
                 n1, n2 = k % 4, (k + 1) % 4
                 cv2.line(temp1_orig_img, (box[n1][0], box[n1][1]), (box[n2][0], box[n2][1]), (255, 0, 0), 2)
             # print(car_plate1.shape)
-            cv2.imshow('opencv_' + str(i), car_plate1)
+            cv2.namedWindow('recognize', cv2.WINDOW_AUTOSIZE)
+            cv2.imshow('recognize', car_plate1)
             cv2.waitKey()
             # adjust area #
             carPlate_list.append(car_plate1)
@@ -481,6 +478,7 @@ def get_chars(car_plate1):
     cv2.imwrite('./carIdentityData/opencv_output/plate.jpg', plates)
     char_addr_list = horizontal_cut_chars(plates)  # cut into single character
 
+    cv2.namedWindow('char_img', cv2.WINDOW_AUTOSIZE)
     for i, addr in enumerate(char_addr_list):
         char_img = car_plate1[chars_top:chars_bottom + 1, addr[0]:addr[1]]
         w, h = char_img.shape
@@ -489,6 +487,7 @@ def get_chars(car_plate1):
         else:
             continue
         char_imgs.append(char_img)
+
         cv2.imshow("char_img", char_img)
         cv2.waitKey()
     return char_imgs
