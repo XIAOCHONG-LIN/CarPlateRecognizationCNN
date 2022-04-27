@@ -295,7 +295,7 @@ def verify_color(rotate_rect, src_image):
             if seed_cnt >= valid_seed_num:
                 break
     # adjusting #
-    show_seed = np.random.uniform(1, 100, 1).astype(np.uint16)
+    # show_seed = np.random.uniform(1, 100, 1).astype(np.uint16)
     cv2.imshow('floodfill', flood_img)
     cv2.waitKey()
 
