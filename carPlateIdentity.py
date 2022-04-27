@@ -87,8 +87,8 @@ def verify_scale(rotate_rect):
     r = rotate_rect[1][0] / rotate_rect[1][1]
     r = max(r, 1 / r)
     area = rotate_rect[1][0] * rotate_rect[1][1]
-    print('area:', min_area, '-', max_area, 'r:', min_aspect, '-', max_aspect)
-    print('rect area:', area, 'rect r:', r)
+    # print('area:', min_area, '-', max_area, 'r:', min_aspect, '-', max_aspect)
+    # print('rect area:', area, 'rect r:', r)
     if min_area <= area <= max_area and min_aspect <= r <= max_aspect:
         # check if the angel of rectangle exceeds theta
         # print('verify_scale:', rotate_rect[2])
@@ -166,18 +166,20 @@ def img_Transform(car_rect, image):
 
 def pre_process(orig_img):
     gray_img = cv2.cvtColor(orig_img, cv2.COLOR_BGR2GRAY)  # convert to grayscale image
-    # cv2.imshow('gray_img', gray_img)
+    cv2.imshow('gray_img', gray_img)
+    cv2.waitKey()
 
     # blur_img = cv2.blur(gray_img, (3, 3))
     kernel_size = 5
-    gauss_gray = gaussian_blur(gray_img, kernel_size)  # gaussian blue
-    # cv2.imshow('blur', blur_img)
+    gauss_gray = gaussian_blur(gray_img, kernel_size)  # gaussian blur
+    cv2.imshow('blur', gauss_gray)
+    cv2.waitKey()
 
     low_threshold = 50
     high_threshold = 150
     canny_edges = canny(gauss_gray, low_threshold, high_threshold)
-    # cv2.imshow('canny', canny_edges)
-
+    cv2.imshow('canny edge', canny_edges)
+    cv2.waitKey()
     # sobel_img = cv2.Sobel(blur_img, cv2.CV_16S, 1, 0, ksize=3)
     # sobel_img = cv2.convertScaleAbs(sobel_img)  # sobel edge finding
     # cv2.imshow('sobel', sobel_img)
@@ -189,16 +191,19 @@ def pre_process(orig_img):
     blue_img = blue_img.astype('float32')  # find blue area [100, 124]
 
     mix_img = np.multiply(canny_edges, blue_img)  # find blue edge
-    # cv2.imshow('mix', mix_img)
+    cv2.imshow('mix with blue', mix_img)
+    cv2.waitKey()
 
     mix_img = mix_img.astype(np.uint8)
 
     ret1, binary_img = cv2.threshold(mix_img, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)  # binarization
-    # cv2.imshow('binary',binary_img)
+    cv2.imshow('binary',binary_img)
+    cv2.waitKey()
 
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 5))
     close_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)  # morphology operation
-    # cv2.imshow('close', close_img)
+    cv2.imshow('morphology', close_img)
+    cv2.waitKey()
 
     return close_img
 
@@ -294,9 +299,13 @@ def verify_color(rotate_rect, src_image):
     cv2.namedWindow("floodfill" + str(show_seed), 0)
     cv2.resizeWindow("floodfill" + str(show_seed), 640, 480)
     cv2.imshow('floodfill' + str(show_seed), flood_img)
+    cv2.waitKey()
+
     cv2.namedWindow("flood_mask" + str(show_seed), 0)
     cv2.resizeWindow("flood_mask" + str(show_seed), 640, 480)
     cv2.imshow('flood_mask' + str(show_seed), mask)
+    cv2.waitKey()
+
     # adjusting #
     # find the minimum rectangle area
     mask_points = []
@@ -305,7 +314,7 @@ def verify_color(rotate_rect, src_image):
             if mask[row, col] != 0:
                 mask_points.append((col - 1, row - 1))
     mask_rotateRect = cv2.minAreaRect(np.array(mask_points))
-    print('original mask:', mask_rotateRect)
+    # print('original mask:', mask_rotateRect)
     # angle = mask_rotateRect[2]
     # if 0 < angle < 10:
     #     angle = 0
@@ -323,8 +332,6 @@ def verify_color(rotate_rect, src_image):
 
 # locating car plate
 def locate_carPlate(orig_img, pred_image):
-    cv2.imshow('pre-process', pred_image)
-    cv2.waitKey()
     carPlate_list = []
     temp1_orig_img = orig_img.copy()  # adjusting
     temp2_orig_img = orig_img.copy()  # adjusting
@@ -343,11 +350,11 @@ def locate_carPlate(orig_img, pred_image):
         # rotate_rect = (rotate_rect[0], rotate_rect[1], angle)
         # print('new rotate_rect:', rotate_rect)
         if verify_scale(rotate_rect):  # verify car plate by scale
-            print('enter scale:', rotate_rect)
+            # print('enter scale:', rotate_rect)
             ret1, rotate_rect2 = verify_color(rotate_rect, temp2_orig_img)  # Verify car plate by color
             if not ret1:
                 continue
-            print('recognized rect:', rotate_rect2)
+            # print('recognized rect:', rotate_rect2)
             angle = rotate_rect2[2]
             if angle > 0:
                 angle = angle - 180
@@ -497,7 +504,6 @@ def extract_char(car_plate1):
 
 
 def cnn_select_carPlate(plate_list, model_path):
-    print('cnn plate list:', np.array(plate_list).shape)
     if len(plate_list) == 0:
         return False, plate_list
     g1 = tf.Graph()
@@ -562,14 +568,13 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
-    img = cv2.imread('./images/pictures/46.jpg')
+    # img = cv2.imread('./images/pictures/1.jpg')
 
-    # img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
+    img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
 
     pred_img = pre_process(img)  # preprocessing
 
     car_plate_list = locate_carPlate(img, pred_img)  # locating the car plate
-    print('car plate quantity:', len(car_plate_list))
 
     ret, car_plate = cnn_select_carPlate(car_plate_list, plate_model_path)  # car plate recognize
     if not ret:
