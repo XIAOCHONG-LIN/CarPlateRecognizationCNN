@@ -11,8 +11,6 @@ char_table = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', '
               'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '川', '鄂', '赣', '甘', '贵',
               '桂', '黑', '沪', '冀', '津', '京', '吉', '辽', '鲁', '蒙', '闽', '宁', '青', '琼', '陕', '苏', '晋',
               '皖', '湘', '新', '豫', '渝', '粤', '云', '藏', '浙']
-head_table = ['川', '鄂', '赣', '甘', '贵', '桂', '黑', '沪', '冀', '津', '京', '吉', '辽', '鲁', '蒙', '闽', '宁', '青', '琼',
-              '陕', '苏', '晋', '皖', '湘', '新', '豫', '渝', '粤', '云', '藏', '浙']
 
 
 def gaussian_blur(image, kernel_size):
@@ -158,28 +156,28 @@ def img_Transform(car_rect, image):
         dst = cv2.warpAffine(image, M, (round(img_w * 2), round(img_h * 2)))  # apply transformation
         car_img = dst[int(right_point[1]):int(height_point[1]), int(new_left_point[0]):int(right_point[0])]
 
-    cv2.imshow('car_img: ', car_img)
-    cv2.waitKey()
+    # cv2.imshow('car_img: ', car_img)
+    # cv2.waitKey()
 
     return car_img
 
 
 def pre_process(orig_img):
     gray_img = cv2.cvtColor(orig_img, cv2.COLOR_BGR2GRAY)  # convert to grayscale image
-    cv2.imshow('gray_img', gray_img)
-    cv2.waitKey()
+    # cv2.imshow('gray_img', gray_img)
+    # cv2.waitKey()
 
     # blur_img = cv2.blur(gray_img, (3, 3))
     kernel_size = 5
     gauss_gray = gaussian_blur(gray_img, kernel_size)  # gaussian blur
-    cv2.imshow('blur', gauss_gray)
-    cv2.waitKey()
+    # cv2.imshow('blur', gauss_gray)
+    # cv2.waitKey()
 
     low_threshold = 50
     high_threshold = 150
     canny_edges = canny(gauss_gray, low_threshold, high_threshold)
-    cv2.imshow('canny edge', canny_edges)
-    cv2.waitKey()
+    # cv2.imshow('canny edge', canny_edges)
+    # cv2.waitKey()
     # sobel_img = cv2.Sobel(blur_img, cv2.CV_16S, 1, 0, ksize=3)
     # sobel_img = cv2.convertScaleAbs(sobel_img)  # sobel edge finding
     # cv2.imshow('sobel', sobel_img)
@@ -191,19 +189,19 @@ def pre_process(orig_img):
     blue_img = blue_img.astype('float32')  # find blue area [100, 124]
 
     mix_img = np.multiply(canny_edges, blue_img)  # find blue edge
-    cv2.imshow('mix with blue', mix_img)
-    cv2.waitKey()
+    # cv2.imshow('mix with blue', mix_img)
+    # cv2.waitKey()
 
     mix_img = mix_img.astype(np.uint8)
 
     ret1, binary_img = cv2.threshold(mix_img, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)  # binarization
-    cv2.imshow('binary',binary_img)
-    cv2.waitKey()
+    # cv2.imshow('binary',binary_img)
+    # cv2.waitKey()
 
     kernel = cv2.getStructuringElement(cv2.MORPH_RECT, (21, 5))
     close_img = cv2.morphologyEx(binary_img, cv2.MORPH_CLOSE, kernel)  # morphology operation
-    cv2.imshow('morphology', close_img)
-    cv2.waitKey()
+    # cv2.imshow('morphology', close_img)
+    # cv2.waitKey()
 
     return close_img
 
@@ -296,11 +294,11 @@ def verify_color(rotate_rect, src_image):
                 break
     # adjusting #
     # show_seed = np.random.uniform(1, 100, 1).astype(np.uint16)
-    cv2.imshow('floodfill', flood_img)
-    cv2.waitKey()
+    # cv2.imshow('floodfill', flood_img)
+    # cv2.waitKey()
 
-    cv2.imshow('flood_mask', mask)
-    cv2.waitKey()
+    # cv2.imshow('flood_mask', mask)
+    # cv2.waitKey()
 
     # adjusting #
     # find the minimum rectangle area
@@ -368,13 +366,13 @@ def locate_carPlate(orig_img, pred_image):
                 n1, n2 = k % 4, (k + 1) % 4
                 cv2.line(temp1_orig_img, (box[n1][0], box[n1][1]), (box[n2][0], box[n2][1]), (255, 0, 0), 2)
             # print(car_plate1.shape)
-            cv2.namedWindow('recognize', cv2.WINDOW_AUTOSIZE)
-            cv2.imshow('recognize', car_plate1)
-            cv2.waitKey()
+            # cv2.namedWindow('recognize', cv2.WINDOW_AUTOSIZE)
+            # cv2.imshow('recognize', car_plate1)
+            # cv2.waitKey()
             # adjust area #
             carPlate_list.append(car_plate1)
-    cv2.imshow('contour', temp1_orig_img)
-    cv2.waitKey()
+    # cv2.imshow('contour', temp1_orig_img)
+    # cv2.waitKey()
     return carPlate_list
 
 
@@ -474,11 +472,11 @@ def get_chars(car_plate1):
 
     plates = car_plate1[chars_top:chars_bottom + 1, :]
     # cv2.imshow('plates',plates)
-    cv2.imwrite('./carIdentityData/opencv_output/car.jpg', car_plate1)
-    cv2.imwrite('./carIdentityData/opencv_output/plate.jpg', plates)
+    # cv2.imwrite('./carIdentityData/opencv_output/car.jpg', car_plate1)
+    # cv2.imwrite('./carIdentityData/opencv_output/plate.jpg', plates)
     char_addr_list = horizontal_cut_chars(plates)  # cut into single character
 
-    cv2.namedWindow('char_img', cv2.WINDOW_AUTOSIZE)
+    # cv2.namedWindow('char_img', cv2.WINDOW_AUTOSIZE)
     for i, addr in enumerate(char_addr_list):
         char_img = car_plate1[chars_top:chars_bottom + 1, addr[0]:addr[1]]
         w, h = char_img.shape
@@ -488,8 +486,8 @@ def get_chars(car_plate1):
             continue
         char_imgs.append(char_img)
 
-        cv2.imshow("char_img", char_img)
-        cv2.waitKey()
+        # cv2.imshow("char_img", char_img)
+        # cv2.waitKey()
     return char_imgs
 
 
@@ -561,6 +559,19 @@ def cnn_recognize_char(img_list, model_path):
             return text_list
 
 
+def ProcessImage(image_number):
+    img = cv2.imread(f'./images/pictures/{image_number}.jpg')
+    pred_img = pre_process(img)  # preprocessing
+    car_plate_list = locate_carPlate(img, pred_img)  # locating the car plate
+    ret, car_plate = cnn_select_carPlate(car_plate_list, plate_model_path)  # car plate recognize
+    if not ret:
+        return ["car plate not found!"]
+    # cv2.imshow('cnn_plate', car_plate)
+    char_img_list = extract_char(car_plate)  # extract character
+    text1 = cnn_recognize_char(char_img_list, char_model_path)  # recognize car plate character
+    return text1
+
+
 if __name__ == '__main__':
     cur_dir = os.path.abspath(os.path.dirname(__file__))
     car_plate_w, car_plate_h = 136, 36
@@ -569,26 +580,14 @@ if __name__ == '__main__':
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
     # img = cv2.imread('./images/pictures/1.jpg')
 
-    img = cv2.imread(f'./images/pictures/{sys.argv[1]}.jpg')
-
-    pred_img = pre_process(img)  # preprocessing
-
-    car_plate_list = locate_carPlate(img, pred_img)  # locating the car plate
-
-    ret, car_plate = cnn_select_carPlate(car_plate_list, plate_model_path)  # car plate recognize
-    if not ret:
-        print("car plate not found!")
-        sys.exit(-1)
-    # cv2.imshow('cnn_plate', car_plate)
-
-    char_img_list = extract_char(car_plate)  # extract character
-
-    text = cnn_recognize_char(char_img_list, char_model_path)  # recognize car plate character
-    for word in text:
-        if word not in head_table:
-            text.remove(word)
-        else:
-            break
-    print(text)
-
-    cv2.waitKey(0)
+    if len(sys.argv) > 1:
+        imageNumber = sys.argv[1]
+        text = ProcessImage(imageNumber)
+        print(text)
+        # cv2.waitKey()
+    else:
+        textList = []
+        for imageNumber in range(50):
+            text = ProcessImage(imageNumber + 1)
+            textList.append(text)
+            print(text)
