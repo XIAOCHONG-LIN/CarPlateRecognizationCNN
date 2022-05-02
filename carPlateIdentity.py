@@ -1,6 +1,8 @@
 import cv2
 import os
 import sys
+
+import matplotlib.pyplot as plt
 import numpy as np
 # import tensorflow as tf
 import tensorflow.compat.v1 as tf
@@ -11,6 +13,10 @@ char_table = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', '
               'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z', '川', '鄂', '赣', '甘', '贵',
               '桂', '黑', '沪', '冀', '津', '京', '吉', '辽', '鲁', '蒙', '闽', '宁', '青', '琼', '陕', '苏', '晋',
               '皖', '湘', '新', '豫', '渝', '粤', '云', '藏', '浙']
+chinese_table = ['川', '鄂', '赣', '甘', '贵', '桂', '黑', '沪', '冀', '津', '京', '吉', '辽', '鲁', '蒙', '闽', '宁', '青',
+                 '琼', '陕', '苏', '晋', '皖', '湘', '新', '豫', '渝', '粤', '云', '藏', '浙']
+non_chinese_table = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+                     'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z']
 
 
 def gaussian_blur(image, kernel_size):
@@ -101,6 +107,8 @@ def verify_scale(rotate_rect):
 
 
 global car_img
+global global_adjust_parameter
+global global_connectivity
 
 
 def img_Transform(car_rect, image):
@@ -221,7 +229,8 @@ def verify_color(rotate_rect, src_image):
     # find column and row range
     rand_seed_num = 5000
     valid_seed_num = 200
-    adjust_param = 0.04  # 0.1
+    # adjust_param = 0.04  # 0.1
+    adjust_param = global_adjust_parameter
     box_points = cv2.boxPoints(rotate_rect)
     # print('box points:', box_points)
     box_points_x = [n[0] for n in box_points]
@@ -258,9 +267,9 @@ def verify_color(rotate_rect, src_image):
             # print('pt0, r1', pt1[0], pt2[0], c1)
             # print('pt1, c1', pt1[1], pt2[1], r1)
             if pt2[0] > c1:
-                pt2[0] = c1-1
+                pt2[0] = c1 - 1
             if pt2[1] > r1:
-                pt2[1] = r1-1
+                pt2[1] = r1 - 1
             # print('pt0, r1', pt1[0], pt2[0], c1)
             # print('pt1, c1', pt1[1], pt2[1], r1)
             temp_list_x = [int(x) for x in np.linspace(pt1[0], pt2[0], int(rand_seed_num / 2))]
@@ -471,7 +480,8 @@ def get_chars(car_plate1):
     chars_top, chars_bottom = h_proj_list[h_maxIndex][0], h_proj_list[h_maxIndex][1]
 
     plates = car_plate1[chars_top:chars_bottom + 1, :]
-    # cv2.imshow('plates',plates)
+    # cv2.imshow('plates', plates)
+    # cv2.waitKey()
     # cv2.imwrite('./carIdentityData/opencv_output/car.jpg', car_plate1)
     # cv2.imwrite('./carIdentityData/opencv_output/plate.jpg', plates)
     char_addr_list = horizontal_cut_chars(plates)  # cut into single character
@@ -485,7 +495,6 @@ def get_chars(car_plate1):
         else:
             continue
         char_imgs.append(char_img)
-
         # cv2.imshow("char_img", char_img)
         # cv2.waitKey()
     return char_imgs
@@ -494,6 +503,7 @@ def get_chars(car_plate1):
 def extract_char(car_plate1):
     gray_plate = cv2.cvtColor(car_plate1, cv2.COLOR_BGR2GRAY)
     # cv2.imshow('gray_plate', gray_plate)
+    # cv2.waitKey()
     ret1, binary_plate = cv2.threshold(gray_plate, 0, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
     # cv2.imshow('binary_plate', binary_plate)
     char_img_list1 = get_chars(binary_plate)  # recognize character
@@ -565,11 +575,28 @@ def ProcessImage(image_number):
     car_plate_list = locate_carPlate(img, pred_img)  # locating the car plate
     ret, car_plate = cnn_select_carPlate(car_plate_list, plate_model_path)  # car plate recognize
     if not ret:
-        return ["car plate not found!"]
+        return 1, ["car plate not found!"]
     # cv2.imshow('cnn_plate', car_plate)
     char_img_list = extract_char(car_plate)  # extract character
-    text1 = cnn_recognize_char(char_img_list, char_model_path)  # recognize car plate character
-    return text1
+    text1 = []
+    for i in range(10):
+        text1 = cnn_recognize_char(char_img_list, char_model_path)  # recognize car plate character
+        # print(i)
+        if CheckText(text1):
+            break
+    return 0, text1
+
+
+def CheckText(text1):
+    length = len(text1)
+    if length != 7:
+        return False
+    if text1[0] not in chinese_table:
+        return False
+    for i in range(1, length):
+        if text1[i] not in non_chinese_table:
+            return False
+    return True
 
 
 if __name__ == '__main__':
@@ -578,16 +605,30 @@ if __name__ == '__main__':
     char_w, char_h = 20, 20
     plate_model_path = './carIdentityData/model/plate_recongnize/model.ckpt-510.meta'
     char_model_path = './carIdentityData/model/char_recongnize/model.ckpt-500.meta'
+    hyper_param = [0.01, 0.02, 0.03, 0.04, 0.05, 0.06, 0.07, 0.08, 0.09, 0.1]
     # img = cv2.imread('./images/pictures/1.jpg')
 
     if len(sys.argv) > 1:
         imageNumber = sys.argv[1]
-        text = ProcessImage(imageNumber)
-        print(text)
+        for hp in hyper_param:
+            global_adjust_parameter = hp
+            error, text = ProcessImage(imageNumber)
+            print(text)
         # cv2.waitKey()
     else:
         textList = []
-        for imageNumber in range(50):
-            text = ProcessImage(imageNumber + 1)
-            textList.append(text)
-            print(text)
+        y = []
+        for hp in hyper_param:
+            total_error = 0
+            for imageNumber in range(50):
+                global_adjust_parameter = hp
+                error, text = ProcessImage(imageNumber + 1)
+                textList.append(text)
+                total_error += error
+                # print(imageNumber + 1, text)
+            accuracy_rate = (50 - total_error) / 50
+            print('epoch', hp, 'accuracy:', accuracy_rate)
+            y.append(accuracy_rate)
+        plt.plot(hyper_param, y)
+        plt.show()
+        cv2.waitKey()

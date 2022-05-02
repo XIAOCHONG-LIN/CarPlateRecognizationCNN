@@ -286,9 +286,11 @@ https://blog.csdn.net/jmh1996/article/details/88951797
 
 https://en.wikipedia.org/wiki/Convolutional_neural_network
 
-https://en.wikipedia.org/wiki/TensorFlow 
-
 https://easyai.tech/en/ai-definition/cnn/ 
+
+http://ufldl.stanford.edu/tutorial/supervised/FeatureExtractionUsingConvolution/
+
+https://www.analyticsvidhya.com/blog/2020/02/mathematics-behind-convolutional-neural-network/
 
 SLPNet: Towards End-to-End Car License Plate Detection and Recognition Using Lightweight CNN https://link.springer.com/chapter/10.1007/978-3-030-60639-8_25
 
