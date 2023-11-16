@@ -12,7 +12,7 @@
 * As a core component, Automatic License Plate Recognition (ALPR) plays an important role in modern Intelligent Transportation System (ITS). Due to the complexity in real world, many existing license plate detection and recognition approaches are not robust and efficient enough for practical applications, therefore ALPR still a challenging task both for engineers and researchers.
 
 <img alt="INTRODUCTION OF THE SYSTEM" height="50" src="./ImageREADME/img_6.png"/>
-
+ 
 ####
 <img alt="img_7.png" height="40" src="./ImageREADME/img_7.png"/>
 
