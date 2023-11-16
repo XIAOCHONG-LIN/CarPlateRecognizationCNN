@@ -293,8 +293,3 @@ http://ufldl.stanford.edu/tutorial/supervised/FeatureExtractionUsingConvolution/
 https://www.analyticsvidhya.com/blog/2020/02/mathematics-behind-convolutional-neural-network/
 
 SLPNet: Towards End-to-End Car License Plate Detection and Recognition Using Lightweight CNN https://link.springer.com/chapter/10.1007/978-3-030-60639-8_25
-
-
-####
-
-<img alt="img_42.png" height="50" src="./ImageREADME/img_42.png"/>
